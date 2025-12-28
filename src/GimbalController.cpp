@@ -1,41 +1,41 @@
+//ana kontrol mekanizması burası
 #include "GimbalController.h"
 
-GimbalController::GimbalController() 
-    : _panMotor(PAN_STEP_PIN, PAN_DIR_PIN), 
+GimbalController::GimbalController() //yapıcı metot
+    : _panMotor(PAN_STEP_PIN, PAN_DIR_PIN), //motor nesnelerine pin numaraları atandı
       _tiltMotor(TILT_STEP_PIN, TILT_DIR_PIN) {}
 
 void GimbalController::setup() {
-    _hw.begin();
-    _panMotor.begin();
+    _hw.begin(); //sensörler başlatıldı
+    _panMotor.begin(); // motorlar başlatıldı
     _tiltMotor.begin();
     
     pinMode(MOTOR_ENABLE_PIN, OUTPUT);
-    digitalWrite(MOTOR_ENABLE_PIN, LOW);
+    digitalWrite(MOTOR_ENABLE_PIN, LOW); // motor enable edildi (0 ise çalışır)
     
-    _currentPan = _hw.getPanAngle();
+    _currentPan = _hw.getPanAngle(); // şuanki açılar alınır
     _currentTilt = _hw.getTiltAngle();
-    _targetPan = _currentPan;
+    _targetPan = _currentPan; //sistem açılınca o anki açıyı hedef açı olarak ayarlıyoruz yoksa default 0 olur ve yanlış konuma gider
     _targetTilt = _currentTilt;
 }
 
-void GimbalController::handleNewData(const GimbalData &data) {
-    _targetPan += data.pan_delta;
-    _targetTilt += data.tilt_delta;
+void GimbalController::handleNewData(const GimbalData &data) {//okunan veriyi yakalayıp yeni hedef açıyı oluşturur
+    _targetPan = _currentPan + data.pan_delta;
+    _targetTilt = _currentTilt + data.tilt_delta;
     
-    applySymmetryLimits(_targetPan);
+    applySymmetryLimits(_targetPan); //sınırlar kontrol edildi
     applySymmetryLimits(_targetTilt);
     
-    _hw.setLaser(data.laser_enable, data.laser_fire);
 }
 
-void GimbalController::update() {
+void GimbalController::update() { //anlik konum okunur ve pid çalıştırılır
     _currentPan = _hw.getPanAngle();
     _currentTilt = _hw.getTiltAngle();
     
     executePID();
 }
 
-void GimbalController::executePID() {
+void GimbalController::executePID() { //şuanlık pid yok burası düzeltilecek, şuanda sadece hedef açıya yönlendiriyor
     float panError = _targetPan - _currentPan;
     float tiltError = _targetTilt - _currentTilt;
 
@@ -50,7 +50,7 @@ void GimbalController::executePID() {
     }
 }
 
-void GimbalController::applySymmetryLimits(float &val) {
+void GimbalController::applySymmetryLimits(float &val) { //sınır kontrolü
     if (val > MAX_ANGLE) val = MAX_ANGLE;
     if (val < MIN_ANGLE) val = MIN_ANGLE;
 }

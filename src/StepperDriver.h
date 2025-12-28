@@ -6,11 +6,11 @@
 
 class StepperDriver {
 public:
-    StepperDriver(int stepPin, int dirPin);
-    void begin();
-    void step(int steps); // Pozitif sağ/yukarı, negatif sol/aşağı
-    void setDirection(bool dir);
-    void setEnable(bool state);
+    StepperDriver(int stepPin, int dirPin); //yapıcı metod
+    void begin(); //motor ayarlarını yapar setup gibi
+    void step(int steps); // pozitif ise sağ ve yukarı, negatif ise sol ve aşağı
+    void setDirection(bool dir); //driverdaki dir pinini yönetir (dönüş yönü)
+    void setEnable(bool state); //driverdaki enable pinini yönetir (pin ortaklandı)
 
 private:
     int _stepPin;
