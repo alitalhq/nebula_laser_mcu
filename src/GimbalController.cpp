@@ -20,6 +20,9 @@ void GimbalController::setup() {
 }
 
 void GimbalController::handleNewData(const GimbalData &data) {//okunan veriyi yakalayıp yeni hedef açıyı oluşturur
+    if (!data.laser_enable) {
+        return; 
+    }
     _targetPan = _currentPan + data.pan_delta;
     _targetTilt = _currentTilt + data.tilt_delta;
     
@@ -31,23 +34,65 @@ void GimbalController::handleNewData(const GimbalData &data) {//okunan veriyi ya
 void GimbalController::update() { //anlik konum okunur ve pid çalıştırılır
     _currentPan = _hw.getPanAngle();
     _currentTilt = _hw.getTiltAngle();
-    
+
     executePID();
 }
 
-void GimbalController::executePID() { //şuanlık pid yok burası düzeltilecek, şuanda sadece hedef açıya yönlendiriyor
+void GimbalController::executePID() {
+    unsigned long now = millis();
+    // İlk çalıştırmada zaman farkını 0 yapmamak için kontrol
+    if (_lastPIDTime == 0) {
+        _lastPIDTime = now;
+        return;
+    }
+
+    float dt = (now - _lastPIDTime) / 1000.0f; // Milisaniyeyi saniyeye çevir
+    _lastPIDTime = now;
+
+    if (dt <= 0) return;
+
+    // Hata hesaplama
     float panError = _targetPan - _currentPan;
     float tiltError = _targetTilt - _currentTilt;
 
+    // --- PAN (Yatay) HESABI ---
+    _panIntegral += panError * dt;
+    float panDerivative = (panError - _lastPanError) / dt;
+    
+    // ÇIKIŞ: İdeal Hız (Derece/Saniye)
+    float panVelocity = (PID.kp * panError) + (PID.ki * _panIntegral) + (PID.kd * panDerivative);
+
+    // HIZ SINIRI (Açısal Hız Limiti)
+    if (panVelocity > MAX_ANGULAR_VELOCITY) panVelocity = MAX_ANGULAR_VELOCITY;
+    if (panVelocity < -MAX_ANGULAR_VELOCITY) panVelocity = -MAX_ANGULAR_VELOCITY;
+
+    // Hızı fiziksel adıma çeviriyoruz (Hız * Zaman * Çarpan)
     if (abs(panError) > 0.1f) {
-        int stepsToTake = (int)(panError * STEPS_PER_DEGREE);
-        _panMotor.step(stepsToTake);
+        int stepsToTake = (int)(panVelocity * dt * STEPS_PER_DEGREE);
+        if (stepsToTake != 0) {
+            _panMotor.step(stepsToTake);
+        }
     }
 
+    // --- TILT (Dikey) HESABI ---
+    // (Pan ile aynı mantık, sadece değişkenler tilt olacak)
+    _tiltIntegral += tiltError * dt;
+    float tiltDerivative = (tiltError - _lastTiltError) / dt;
+    float tiltVelocity = (PID.kp * tiltError) + (PID.ki * _tiltIntegral) + (PID.kd * tiltDerivative);
+
+    if (tiltVelocity > MAX_ANGULAR_VELOCITY) tiltVelocity = MAX_ANGULAR_VELOCITY;
+    if (tiltVelocity < -MAX_ANGULAR_VELOCITY) tiltVelocity = -MAX_ANGULAR_VELOCITY;
+
     if (abs(tiltError) > 0.1f) {
-        int stepsToTake = (int)(tiltError * STEPS_PER_DEGREE);
-        _tiltMotor.step(stepsToTake);
+        int stepsToTake = (int)(tiltVelocity * dt * STEPS_PER_DEGREE);
+        if (stepsToTake != 0) {
+            _tiltMotor.step(stepsToTake);
+        }
     }
+
+    // Geçmiş hataları sakla (Bir sonraki döngü için)
+    _lastPanError = panError;
+    _lastTiltError = tiltError;
 }
 
 void GimbalController::applySymmetryLimits(float &val) { //sınır kontrolü

@@ -15,7 +15,7 @@
 #define I2C1_SDA 10 //tilt
 #define I2C1_SCL 11
 
-const float MICROSTEP = 8.0f; //microstep ayarı (donanımdan değiştirmeyi unutma şuanda 8) ilerleyen zamanlarda otomatikleştirilebilir
+const float MICROSTEP = 16.0f; //microstep ayarı (donanımdan değiştirmeyi unutma şuanda 8) ilerleyen zamanlarda otomatikleştirilebilir
 const float REDUCTION_RATIO = 1.0f; //redüktör oranı
 const float STEPS_PER_REV = 200.0f;
 const float STEPS_PER_DEGREE = (STEPS_PER_REV * MICROSTEP * REDUCTION_RATIO) / 360.0f;
@@ -28,9 +28,9 @@ const uint8_t HEADER2 = 0xFF;
 const long BAUD_RATE = 115200;
 
 struct PIDConfig {
-    float kp = 2.0f;
-    float ki = 0.1f;
-    float kd = 0.05f;
+    float kp = 0.5f;
+    float ki = 0.01f;
+    float kd = 0.1f;
 };
 
 #endif
