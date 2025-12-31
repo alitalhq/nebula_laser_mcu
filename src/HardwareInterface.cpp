@@ -27,16 +27,20 @@ bool HardwareInterface::begin() {
 }
 
 float HardwareInterface::getPanAngle() {
-    float raw = _panEncoder.readAngle() * (360.0 / 4096.0); //değeri okur
-    float angle = raw - _panOffset; //referanstan çıkarır
+    float angle = _panEncoder.readAngle() * (360.0 / 4096.0);
+    
+    if (angle >= 360.0f) angle -= 360.0f;
+    if (angle < 0.0f)    angle += 360.0f;
 
     return angle;
 }
 
 float HardwareInterface::getTiltAngle() {
-    float raw = _tiltEncoder.readAngle() * (360.0 / 4096.0);    //aynısı
-    float angle = raw - _tiltOffset;
+    float angle = _tiltEncoder.readAngle() * (360.0 / 4096.0);
     
+    if (angle >= 360.0f) angle -= 360.0f;
+    if (angle < 0.0f)    angle += 360.0f;
+
     return angle;
 }
 

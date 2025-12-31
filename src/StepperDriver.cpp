@@ -19,14 +19,16 @@ void StepperDriver::setEnable(bool state) { //motoru durdurma ve çalıştırma 
 }
 
 void StepperDriver::step(int steps) {
-    bool dir = (steps > 0); //yön belirler
+    if (steps == 0) return;
+    
+    bool dir = (steps > 0);
     setDirection(dir);
     
     int absSteps = abs(steps);
-    for (int i = 0; i < absSteps; i++) { //step motoru verilen adım karar döndürür
+    for (int i = 0; i < absSteps; i++) {
         digitalWrite(_stepPin, HIGH);
-        delayMicroseconds(500);
+        delayMicroseconds(100); // 500'den 100'e çektik: Motor daha hızlı ve seri tepki verir
         digitalWrite(_stepPin, LOW);
-        delayMicroseconds(500);
+        delayMicroseconds(100); 
     }
 }

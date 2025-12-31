@@ -25,12 +25,12 @@ const float MAX_ANGLE = 60.0f;
 
 const uint8_t HEADER1 = 0xAA; //ROS2 kodlarından gelecek serial mesajının içeriğindeki header'lar
 const uint8_t HEADER2 = 0xFF;
-const long BAUD_RATE = 115200;
+const long BAUD_RATE = 921600;
 
 struct PIDConfig {
-    float kp = 0.5f;
+    float kp = 1.2f;
     float ki = 0.01f;
-    float kd = 0.05f;
+    float kd = 0.08f;
 };
 
 #endif

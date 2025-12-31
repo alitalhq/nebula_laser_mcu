@@ -29,7 +29,7 @@ private:
     float _panIntegral = 0, _tiltIntegral = 0;
     unsigned long _lastPIDTime = 0;
 
-    const float MAX_ANGULAR_VELOCITY = 20.0f;
+    const float MAX_ANGULAR_VELOCITY = 15.0f;
 
     void applySymmetryLimits(float &val); //limitler için
     void executePID(); // pid için
