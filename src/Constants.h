@@ -15,22 +15,24 @@
 #define I2C1_SDA 10 //tilt
 #define I2C1_SCL 11
 
-const float MICROSTEP = 16.0f; //microstep ayarı (donanımdan değiştirmeyi unutma şuanda 8) ilerleyen zamanlarda otomatikleştirilebilir
+const float MICROSTEP = 32.0f; //microstep ayarı (donanımdan değiştirmeyi unutma şuanda 8) ilerleyen zamanlarda otomatikleştirilebilir
 const float REDUCTION_RATIO = 1.0f; //redüktör oranı
 const float STEPS_PER_REV = 200.0f;
 const float STEPS_PER_DEGREE = (STEPS_PER_REV * MICROSTEP * REDUCTION_RATIO) / 360.0f;
 
-const float MIN_ANGLE = -60.0f; //açı sınırları
-const float MAX_ANGLE = 60.0f;
+const float MIN_ANGLE = -180.0f; //açı sınırları
+const float MAX_ANGLE = 180.0f;
 
 const uint8_t HEADER1 = 0xAA; //ROS2 kodlarından gelecek serial mesajının içeriğindeki header'lar
 const uint8_t HEADER2 = 0xFF;
 const long BAUD_RATE = 921600;
 
+const float MAX_ANGULAR_VELOCITY = 15.0f;
+
 struct PIDConfig {
-    float kp = 1.2f;
-    float ki = 0.01f;
-    float kd = 0.08f;
+    float kp = 0.8f;
+    float ki = 0.0f;
+    float kd = 0.0f;
 };
 
 #endif

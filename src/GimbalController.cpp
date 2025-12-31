@@ -9,39 +9,62 @@ void GimbalController::setup() {
     _hw.begin(); //sensörler başlatıldı
     _panMotor.begin(); // motorlar başlatıldı
     _tiltMotor.begin();
+
+    // Açılış anındaki gerçek mutlak açıyı oku
+    startPan = _hw.getPanAngle(); 
+    startTilt = _hw.getTiltAngle();
+
+    _panMinLimit = startPan - 30.0f;
+    _panMaxLimit = startPan + 30.0f;
+
+    if (_panMinLimit < 0) _panMinLimit += 360.0f;
+    if (_panMaxLimit >= 360) _panMaxLimit -= 360.0f;
     
     pinMode(MOTOR_ENABLE_PIN, OUTPUT);
     digitalWrite(MOTOR_ENABLE_PIN, LOW); // motor enable edildi (0 ise çalışır)
+
+    _currentPan = startPan;
+    _currentTilt = startTilt;
     
-    _currentPan = _hw.getPanAngle(); // şuanki açılar alınır
-    _currentTilt = _hw.getTiltAngle();
-    _targetPan = _currentPan; //sistem açılınca o anki açıyı hedef açı olarak ayarlıyoruz yoksa default 0 olur ve yanlış konuma gider
-    _targetTilt = _currentTilt;
+    _targetPan = startPan; //sistem açılınca o anki açıyı hedef açı olarak ayarlıyoruz yoksa default 0 olur ve yanlış konuma gider
+    _targetTilt = startTilt;
 }
 
-void GimbalController::handleNewData(const GimbalData &data) {//okunan veriyi yakalayıp yeni hedef açıyı oluşturur
-    if (!data.laser_enable) {
-        return; 
-    }
-    _targetPan += data.pan_delta;
-    _targetTilt += data.tilt_delta;
+void GimbalController::handleNewData(const GimbalData &data) {
+    if (!data.laser_enable) return;
 
-    while (_targetPan >= 360.0f){
-        _targetPan -= 360.0f;
+    // 1. Yeni potansiyel hedefi hesapla
+    nextTargetPan = _targetPan + data.pan_delta;
+    nextTargetTilt = _targetTilt + data.tilt_delta;
+
+    // 2. 0-360 Normalizasyonu (Mutlak enkoder için şart)
+    while (nextTargetPan >= 360.0f) nextTargetPan -= 360.0f;
+    while (nextTargetPan < 0.0f)    nextTargetPan += 360.0f;
+
+    while (nextTargetTilt >= 360.0f) nextTargetTilt -= 360.0f;
+    while (nextTargetTilt < 0.0f)    nextTargetTilt += 360.0f;
+
+    // 3. Pan İçin Güvenli Bölge Kontrolü (Dinamik +-30)
+    panInside = false;
+    if (_panMinLimit < _panMaxLimit) {
+        // Normal durum (Örn: 100 ile 160 arası)
+        if (nextTargetPan >= _panMinLimit && nextTargetPan <= _panMaxLimit) panInside = true;
+    } else {
+        // Başa sarma durumu (Örn: 340 ile 10 arası)
+        if (nextTargetPan >= _panMinLimit || nextTargetPan <= _panMaxLimit) panInside = true;
     }
-    while (_targetPan < 0.0f){
-        _targetPan += 360.0f;
+
+    // 4. Tilt İçin Güvenli Bölge Kontrolü
+    tiltInside = false;
+    if (_tiltMinLimit < _tiltMaxLimit) {
+        if (nextTargetTilt >= _tiltMinLimit && nextTargetTilt <= _tiltMaxLimit) tiltInside = true;
+    } else {
+        if (nextTargetTilt >= _tiltMinLimit || nextTargetTilt <= _tiltMaxLimit) tiltInside = true;
     }
-    while (_targetTilt >= 360.0f){
-         _targetTilt -= 360.0f;
-    }
-    while (_targetTilt < 0.0f){
-        _targetTilt += 360.0f;
-    }
-    
-    applySymmetryLimits(_targetPan); //sınırlar kontrol edildi
-    applySymmetryLimits(_targetTilt);
-    
+
+    // 5. Sadece sınır içindeyse hedefi güncelle
+    if (panInside)  _targetPan = nextTargetPan;
+    if (tiltInside) _targetTilt = nextTargetTilt;
 }
 
 void GimbalController::update() { //anlik konum okunur ve pid çalıştırılır
@@ -94,7 +117,7 @@ void GimbalController::executePID() {
 
     // 5. Motorlara Adım Komutu Gönder
     // Pan Eksenini Hareket Ettir
-    if (abs(panError) > 0.15f) { // Ölü bölge (Deadzone)
+    if (abs(panError) > 0.05f) { // Ölü bölge (Deadzone)
         int stepsToTake = (int)(panVelocity * dt * STEPS_PER_DEGREE);
         
         // İşlemciyi kilitlememek ve akıcılığı korumak için adım limiti

@@ -23,13 +23,19 @@ private:
     float _currentPan = 0.0f;
     float _currentTilt = 0.0f;
 
+    float nextTargetPan, nextTargetTilt;
+    bool panInside, tiltInside;
+
+    float _panMinLimit, _panMaxLimit;
+    float _tiltMinLimit, _tiltMaxLimit;
+
+    float startPan, startTilt;
+
     PIDConfig PID;
 
     float _lastPanError = 0, _lastTiltError = 0;
     float _panIntegral = 0, _tiltIntegral = 0;
     unsigned long _lastPIDTime = 0;
-
-    const float MAX_ANGULAR_VELOCITY = 15.0f;
 
     void applySymmetryLimits(float &val); //limitler için
     void executePID(); // pid için
