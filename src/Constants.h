@@ -30,7 +30,7 @@ const long BAUD_RATE = 115200;
 struct PIDConfig {
     float kp = 0.5f;
     float ki = 0.01f;
-    float kd = 0.1f;
+    float kd = 0.05f;
 };
 
 #endif
