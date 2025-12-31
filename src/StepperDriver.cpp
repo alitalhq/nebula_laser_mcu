@@ -27,8 +27,8 @@ void StepperDriver::step(int steps) {
     int absSteps = abs(steps);
     for (int i = 0; i < absSteps; i++) {
         digitalWrite(_stepPin, HIGH);
-        delayMicroseconds(100); // 500'den 100'e çektik: Motor daha hızlı ve seri tepki verir
+        delayMicroseconds(80); // 500'den 100'e çektik: Motor daha hızlı ve seri tepki verir
         digitalWrite(_stepPin, LOW);
-        delayMicroseconds(100); 
+        delayMicroseconds(80); 
     }
 }

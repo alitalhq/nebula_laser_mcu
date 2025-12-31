@@ -27,12 +27,14 @@ const uint8_t HEADER1 = 0xAA; //ROS2 kodlarından gelecek serial mesajının iç
 const uint8_t HEADER2 = 0xFF;
 const long BAUD_RATE = 921600;
 
-const float MAX_ANGULAR_VELOCITY = 15.0f;
+const float DEAD_ZONE = 0.1f;
+
+const float MAX_ANGULAR_VELOCITY = 100.0f;
 
 struct PIDConfig {
-    float kp = 0.8f;
-    float ki = 0.0f;
-    float kd = 0.0f;
+    float kp = 2.0f;
+    float ki = 0.05f;
+    float kd = 0.15f;
 };
 
 #endif
